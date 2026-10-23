@@ -130,6 +130,7 @@
   var chip=document.getElementById('firmware-chip');
   var icon=document.getElementById('detect-icon');
   var BASE='https://alryes96.github.io/ALRYES96-PS4-Host/g2all/';
+  var BASE_900='https://alryes96.github.io/ALRYES96-PS4-Host-900/';
   var slopkitCodes=[1100,1150,1152,1200,1202,1250,1252,1300];
 
   function normalizeFirmware(major,minor){
@@ -148,6 +149,10 @@
     var m=String(version||'').match(/^(\d+)\.(\d{1,2})$/);
     if(!m) return null;
     return parseInt(m[1],10)*100+parseInt(m[2],10);
+  }
+  
+  function hostFor(version){
+    return firmwareCode(version)===900 ? BASE_900 : BASE;
   }
   function routeFor(version){
     var code=firmwareCode(version);
@@ -216,13 +221,23 @@
     if(routeFor(detected)){
       title.textContent='جاري فتح مضيف الجلبريك تلقائياً…';
       message.textContent='تم اكتشاف إصدار '+detected+'. انتظر لحظة؛ لن تحتاج إلى الضغط على أي زر.';
-      setTimeout(function(){ window.location.replace(BASE+'index.html'); }, 900);
+      setTimeout(function(){ window.location.replace(hostFor(detected)+'index.html'); }, 900);
     }
   }else{
     status('',false);
     try{
       var saved=localStorage.getItem('alryes96-firmware');
-      if(saved && hasOption(saved)) status(saved,false);
+    if(saved && hasOption(saved)){
+    status(saved,false);
+    var uaSaved=navigator.userAgent||'';
+    if(/PlayStation\s+4/i.test(uaSaved) && !/PlayStation\s+5/i.test(uaSaved)){
+    title.textContent='جاري فتح المسار المحفوظ…';
+    message.textContent='تم استرجاع إصدار '+saved+' المحفوظ. جاري فتح المسار المطابق.';
+    setTimeout(function(){
+      window.location.replace(hostFor(saved)+'index.html');
+    },900);
+  }
+}
     }catch(e){}
   }
   select.addEventListener('change',function(){
@@ -236,7 +251,7 @@
       return;
     }
     try{localStorage.setItem('alryes96-firmware',firmware);}catch(e){}
-    window.location.href=BASE+'index.html';
+    window.location.href=hostFor(firmware)+'index.html';
   });
 })();
 </script>
